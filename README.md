@@ -1,3 +1,3 @@
 # AWS_Lambda_learning
 
-[PDF file here](/AWS_Lambda_learning/AWS_Lambda_Blueprint.pdf)
+[คลิกเพื่อเปิดไฟล์ AWS_Lambda_Blueprint.pdf](./AWS_Lambda_Blueprint.pdf)
