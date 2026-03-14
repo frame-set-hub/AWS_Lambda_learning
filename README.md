@@ -2,6 +2,33 @@
 
 สถาปัตยกรรม Serverless สู่ความยืดหยุ่นที่ไร้ขีดจำกัด — คู่มือฉบับสมบูรณ์สำหรับผู้บริหารและนักพัฒนา
 
+## สารบัญ
+
+- [เอกสารประกอบการเรียนรู้](#เอกสารประกอบการเรียนรู้)
+- [POC: เรียกใช้ AWS Lambda จาก Spring Boot](#poc-เรียกใช้-aws-lambda-จาก-spring-boot)
+- [ภาพรวมเนื้อหา](#ภาพรวมเนื้อหา)
+  - [1. Serverless Paradigm](#1-serverless-paradigm--จาก-server-based-สู่-serverless)
+  - [2. 7 เสาหลักของสถาปัตยกรรม AWS Lambda](#2-7-เสาหลักของสถาปัตยกรรม-aws-lambda)
+  - [3. โครงสร้างภายในของ Lambda Function](#3-โครงสร้างภายในของ-lambda-function)
+  - [4. หลักการออกแบบฟังก์ชัน](#4-หลักการออกแบบฟังก์ชัน)
+  - [5. Invocation Models](#5-invocation-models--3-รูปแบบการเรียกใช้งาน)
+  - [6. Configuring & Billing](#6-configuring--billing--จ่ายตามทรัพยากรที่จัดสรร)
+  - [7. Concurrency](#7-concurrency--กลไกรองรับผู้ใช้งานพร้อมกันจำนวนมหาศาล)
+  - [8. Deploying](#8-deploying--การปรับใช้ระบบใหม่อย่างปลอดภัย)
+  - [9. Security](#9-security--ระบบรักษาความปลอดภัย-2-ชั้น-dual-layer-security)
+  - [10. Monitoring](#10-monitoring--ระบบตรวจสอบและติดตามสถานะแบบ-360-องศา)
+- [เนื้อหาระดับ Enterprise](#เนื้อหาระดับ-enterprise)
+  - [11. Event-Driven Architecture](#11-event-driven-architecture--ขับเคลื่อนระบบด้วยเหตุการณ์)
+  - [12. AWS SAM](#12-aws-sam--จัดการโครงสร้างพื้นฐานอย่างเป็นระบบ)
+  - [13. Anatomy of an Invocation](#13-anatomy-of-an-invocation--วงจรชีวิตและ-cold-start)
+  - [14. Conquering Cold Starts](#14-conquering-cold-starts)
+  - [15. Connecting to the World](#15-connecting-to-the-world--ประตูเชื่อมสู่ภายนอก)
+  - [16. The Observability Triad](#16-the-observability-triad--สามง่ามแห่งการตรวจสอบระบบ)
+- [วงจรแห่งสถาปัตยกรรม Serverless ที่สมบูรณ์แบบ](#วงจรแห่งสถาปัตยกรรม-serverless-ที่สมบูรณ์แบบ)
+
+
+---
+
 ## เอกสารประกอบการเรียนรู้
 
 - [AWS Lambda Blueprint (พื้นฐาน)](./AWS_Lambda_Blueprint.pdf) — 14 หน้า
@@ -210,3 +237,51 @@ GOVERN: ควบคุมและตรวจสอบ
 ```
 
 > **Ultimate Takeaway:** AWS Lambda ไม่ใช่แค่เซิร์ฟเวอร์รูปแบบใหม่ แต่เป็น 'สถาปัตยกรรม' ที่ปลดล็อกให้องค์กรสามารถพัฒนานวัตกรรมได้อย่างรวดเร็ว ขยายตัวได้ไร้ขีดจำกัด ปลอดภัย และจ่ายเงินเฉพาะเวลาที่สร้างมูลค่าทางธุรกิจเท่านั้น
+
+---
+
+## POC: เรียกใช้ AWS Lambda จาก Spring Boot
+
+โปรเจกต์ตัวอย่าง (Proof of Concept) สำหรับทดสอบเรียกใช้ AWS Lambda จริงผ่าน Spring Boot + AWS SDK for Java v2
+
+### สถาปัตยกรรม POC
+
+```
+┌─────────────────┐     HTTP      ┌──────────────────────┐    AWS SDK    ┌─────────────────┐
+│   Client/curl   │ ──────────▶  │  Spring Boot App     │ ──────────▶  │  AWS Lambda     │
+│                 │  :8080       │  (Java 17 + SDK v2)  │   Invoke     │  (Python 3.12)  │
+└─────────────────┘              └──────────────────────┘              └─────────────────┘
+```
+
+### Tech Stack
+
+| Component | Technology |
+|---|---|
+| Lambda Function | Python 3.12 |
+| Client Application | Spring Boot 3.3 + Java 17 |
+| AWS SDK | AWS SDK for Java v2 |
+| Credentials | `.env` file (via spring-dotenv) |
+| Deploy | AWS CLI + Bash script |
+
+### Quick Start
+
+```bash
+# 1. ตั้งค่า credentials
+cd poc
+cp .env.example .env   # แก้ไขใส่ AWS credentials
+
+# 2. Deploy Lambda ขึ้น AWS
+chmod +x deploy-lambda.sh
+./deploy-lambda.sh
+
+# 3. รัน Spring Boot
+cd spring-boot-invoker
+set -a && source ../.env && set +a
+mvn spring-boot:run
+
+# 4. ทดสอบ
+curl http://localhost:8080/api/lambda/greet?name=John
+curl "http://localhost:8080/api/lambda/calculate?name=Dev&a=10&b=20"
+```
+
+> รายละเอียดเพิ่มเติมดูที่ [poc/README.md](./poc/README.md)

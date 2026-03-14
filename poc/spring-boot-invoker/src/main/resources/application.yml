@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+aws:
+  region: ${AWS_REGION:ap-southeast-1}
+  lambda:
+    function-name: ${LAMBDA_FUNCTION_NAME:poc-hello-lambda}
